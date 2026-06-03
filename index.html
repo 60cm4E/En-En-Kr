@@ -104,8 +104,8 @@ main{flex:1;padding:14px 12px 30px}
  padding:24px;text-align:center}
 .face .lab{position:absolute;top:14px;left:0;right:0;font-size:10.5px;font-weight:800;color:var(--sub);text-transform:uppercase}
 .face .txt{font-size:22px;font-weight:800;word-break:keep-all;line-height:1.4}
-.face.back{transform:rotateY(180deg);background:linear-gradient(160deg,#f7f8ff,#eef7f5)}
-.face.back .txt{font-size:17px;font-weight:700;color:var(--ko)}
+.face.rear{transform:rotateY(180deg);background:linear-gradient(160deg,#f7f8ff,#eef7f5)}
+.face.rear .txt{font-size:17px;font-weight:700;color:var(--ko)}
 .face .txt.eng{color:var(--en)}
 .face .hint{position:absolute;bottom:13px;left:0;right:0;font-size:11px;color:#aab}
 .fc-meta{display:flex;justify-content:space-between;align-items:center}
@@ -415,7 +415,7 @@ function renderFlash(){
    '<div class="chipbar"><button class="mini" id="rev">↔ 앞면 바꾸기</button><button class="mini" id="shuf">🔀 섞기</button></div></div>'+
   '<div class="fc'+(fc.flip?' flip':'')+'" id="card"><div class="fc-in">'+
    '<div class="face front"><div class="lab">'+esc(fl)+'</div><div class="txt '+(fe?'eng':'')+'">'+chunked(front)+'</div><div class="hint">탭하여 뒤집기</div></div>'+
-   '<div class="face back"><div class="lab">'+esc(bl)+'</div><div class="txt '+(be?'eng':'')+'">'+chunked(back)+'</div><div class="hint">탭하여 뒤집기</div></div>'+
+   '<div class="face rear"><div class="lab">'+esc(bl)+'</div><div class="txt '+(be?'eng':'')+'">'+chunked(back)+'</div><div class="hint">탭하여 뒤집기</div></div>'+
    '</div></div>'+
   '<div class="fc-ctl"><button class="nav" id="prev">◀ 이전</button><button class="nav" id="next">다음 ▶</button></div></div>';
  document.getElementById('card').onclick=function(){fc.flip=!fc.flip;this.classList.toggle('flip');};
