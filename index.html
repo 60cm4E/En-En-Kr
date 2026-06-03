@@ -114,10 +114,34 @@ main{flex:1;padding:14px 12px 30px}
 .fc-ctl{display:flex;gap:10px}
 .fc-ctl .nav{flex:1;border:1px solid var(--line);background:#fff;border-radius:12px;padding:12px;font-size:15px;
  font-weight:800;cursor:pointer;font-family:inherit;color:var(--brand-d)}
+.spk{position:absolute;top:12px;right:14px;border:1px solid var(--line);background:#fff;border-radius:10px;font-size:15px;padding:4px 9px;cursor:pointer;z-index:2}
+.spkt{border:1px solid var(--line);background:#fff;border-radius:7px;font-size:11px;padding:2px 6px;margin-right:8px;cursor:pointer;flex:0 0 auto}
+.fc-judge{display:flex;gap:10px}
+.jb{flex:1;border:1px solid var(--line);border-radius:12px;padding:11px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit}
+.jb.no{color:var(--bad);background:#fff5f5;border-color:#fecaca}
+.jb.yes{color:var(--good);background:#f0fdf4;border-color:#bbf7d0}
+.jb.yes.done{background:var(--good);color:#fff;border-color:var(--good)}
+.resume{background:linear-gradient(135deg,var(--brand),var(--teal));color:#fff;border-radius:13px;padding:13px 15px;margin-bottom:12px;cursor:pointer;font-weight:800;display:flex;flex-direction:column;gap:3px}
+.resume span{font-size:11.5px;font-weight:600;opacity:.92}
+.qtop{display:flex;justify-content:space-between;margin-bottom:10px}
+.qtop .info{font-size:12px;font-weight:700;color:var(--sub)}
+.qprompt{background:#fff;border:1px solid var(--line);border-radius:13px;padding:22px 16px;text-align:center;font-size:21px;font-weight:800;margin-bottom:12px;word-break:keep-all;display:flex;align-items:center;justify-content:center;flex-wrap:wrap}
+.qopts{display:flex;flex-direction:column;gap:9px}
+.qopt{border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;text-align:center;word-break:keep-all;line-height:1.4}
+.qopt.correct{border-color:var(--good);background:#eafaf0;color:var(--good)}
+.qopt.wrongo{border-color:var(--bad);background:#fdecec;color:var(--bad)}
+.qend{text-align:center;padding:12px}
+.qbig{font-size:42px;font-weight:800;color:var(--brand)}
+.qsub{color:var(--sub);font-weight:700}
+.qwrap{background:#fff;border:1px solid var(--line);border-radius:13px;padding:4px 0;margin:12px 0}
+.qwh{font-size:12px;font-weight:800;color:var(--bad);padding:9px 14px}
+.qwrow{display:flex;justify-content:space-between;gap:10px;padding:9px 14px;border-top:1px solid var(--line);font-size:13px}
+.qwrow b{color:var(--ink)}
+.qwrow span{color:var(--ko);text-align:right}
 .mtop{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .mtop .info{font-size:11.5px;color:var(--sub);font-weight:700}
-.mcols{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.mcol{display:flex;flex-direction:column;gap:8px}
+.mcols{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch}
+.mcol{display:grid;grid-auto-rows:1fr;gap:8px}
 .mcard{background:#fff;border:1.5px solid var(--line);border-radius:11px;padding:11px 8px;font-size:12px;
  font-weight:600;cursor:pointer;min-height:52px;display:flex;align-items:center;justify-content:center;
  text-align:center;word-break:keep-all;transition:.12s;line-height:1.35}
@@ -130,6 +154,7 @@ main{flex:1;padding:14px 12px 30px}
 .mdone{text-align:center;padding:16px;background:#eafaf0;border:1px solid #bbf7d0;border-radius:13px;margin-bottom:10px}
 .mdone b{color:var(--good)}
 footer{text-align:center;color:var(--sub);font-size:11px;padding:14px}
+@media(min-width:820px){.app{max-width:720px}.fc{height:380px}.face .txt{font-size:26px}.tbl .td{font-size:14.5px}.mcard{font-size:14px;min-height:60px}}
 </style>
 </head>
 <body>
@@ -187,6 +212,17 @@ function hasData(grade,pub){return DB[grade]&&DB[grade][pub];}
 function lessonsOf(grade,pub){return hasData(grade,pub)?Object.keys(DB[grade][pub]).sort():[];}
 function esc(s){return (s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function chunked(str){return esc(str).split(' / ').map((c,i)=>(i?'<span class="sl">/</span>':'')+c).join('');}
+function plain(str){return esc(str).split(' / ').join(' ');}
+function escA(s){return (s+'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+function speak(t){try{if(!t)return;speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.lang='en-US';u.rate=0.9;speechSynthesis.speak(u);}catch(e){}}
+function loadM(){try{return JSON.parse(localStorage.getItem('mastery'))||{};}catch(e){return {};}}
+function saveM(m){try{localStorage.setItem('mastery',JSON.stringify(m));}catch(e){}}
+function lkey(){return st.grade+'|'+SCHOOL[st.school][st.grade]+'|'+st.lesson;}
+function isKnown(wi){var o=loadM()[lkey()]||{};return !!o[wi];}
+function setKnown(wi,v){var m=loadM();var o=m[lkey()]||(m[lkey()]={});if(v)o[wi]=1;else delete o[wi];if(!Object.keys(o).length)delete m[lkey()];saveM(m);}
+function knownCount(g,pub,L){var o=loadM()[g+'|'+pub+'|'+L]||{};return Object.keys(o).length;}
+function saveResume(){try{localStorage.setItem('resume',JSON.stringify({school:st.school,grade:st.grade,lesson:st.lesson,setIdx:st.setIdx,tool:st.tool}));}catch(e){}}
+function getResume(){try{return JSON.parse(localStorage.getItem('resume'));}catch(e){return null;}}
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;}
 // scope storage
 function scopeKey(s,g){return 'vocabscope:'+s+':'+g;}
@@ -203,13 +239,13 @@ function buildSets(entries){
  const J=a=>a.join(' / ');
  return [
   {name:'1세트',full:'기본 어휘',fa:'영단어',fb:'한글 뜻',aeng:true,beng:false,
-   items:entries.map(e=>({a:e.w,b:e.m}))},
+   items:entries.map((e,i)=>({a:e.w,b:e.m,w:e.w,wi:i}))},
   {name:'2세트',full:'의미·해석 학습',fa:'한글 뜻',fb:'영영풀이 직독직해',aeng:false,beng:false,
-   items:entries.map(e=>({a:e.m,b:e.kor?J(e.kor):e.t}))},
+   items:entries.map((e,i)=>({a:e.m,b:e.kor?J(e.kor):e.t,w:e.w,wi:i}))},
   {name:'3세트',full:'청킹 대조 학습',fa:'직독직해(한글)',fb:'영영풀이(영어)',aeng:false,beng:true,
-   items:entries.map(e=>({a:e.kor?J(e.kor):e.t,b:e.eng?J(e.eng):e.d}))},
+   items:entries.map((e,i)=>({a:e.kor?J(e.kor):e.t,b:e.eng?J(e.eng):e.d,w:e.w,wi:i}))},
   {name:'4세트',full:'단어 → 영영풀이',fa:'영단어',fb:'영영풀이(영어)',aeng:true,beng:true,
-   items:entries.map(e=>({a:e.w,b:e.eng?J(e.eng):e.d}))},
+   items:entries.map((e,i)=>({a:e.w,b:e.eng?J(e.eng):e.d,w:e.w,wi:i}))},
  ];
 }
 // app state
@@ -253,13 +289,14 @@ function render(){
 function renderHome(){
  setTitle('📘 영영풀이 학습');
  st.grade=st.lesson=null;st.setIdx=null;st.tool=null;
- view.innerHTML='<div class="lead"><b>학교</b>를 선택하세요</div><div class="grid c2" id="g"></div>';
+ view.innerHTML=resumeHtml()+'<div class="lead"><b>학교</b>를 선택하세요</div><div class="grid c2" id="g"></div>';
  const g=document.getElementById('g');
  Object.keys(SCHOOL).forEach(s=>{
   const t=document.createElement('div');t.className='tile big brand';
   t.innerHTML='<div class="ic">'+SCHOOL_IC[s]+'</div><div class="nm">'+s+'</div><div class="sb">중학교</div>';
   t.onclick=()=>{st.school=s;go('grade');};g.appendChild(t);
  });
+ var rb=document.getElementById('resumeBtn'); if(rb)rb.onclick=doResume;
  if(admin){
   const a=document.createElement('div');a.className='tile';a.style.gridColumn='1 / -1';
   a.style.background='linear-gradient(160deg,#fff,#fff1f1)';a.style.borderColor='#fecaca';
@@ -371,7 +408,7 @@ function renderTools(){
  setTitle(SETS[st.setIdx].name+' · 도구 선택');
  view.innerHTML='<div class="lead"><b>학습 도구</b>를 선택하세요</div><div class="grid" id="g"></div>';
  const g=document.getElementById('g');
- const tools=[['table','📋','암기표','표로 보고 정답 가리기'],['flash','🃏','플래시카드','카드 뒤집기 암기'],['match','🎯','매칭게임','짝 맞추기 게임']];
+ const tools=[['table','📋','암기표','표로 보고 정답 가리기'],['flash','🃏','플래시카드','카드 뒤집기 암기'],['quiz','📝','퀴즈','4지선다 자가 테스트'],['match','🎯','매칭게임','짝 맞추기 게임']];
  tools.forEach(([k,ic,nm,sb])=>{
   const t=document.createElement('div');t.className='tile';
   t.innerHTML='<div style="display:flex;align-items:center;gap:12px"><div class="ic" style="margin:0">'+ic+'</div>'+
@@ -382,8 +419,10 @@ function renderTools(){
 function renderStudy(){
  S=SETS[st.setIdx];
  setTitle(st.lesson+' · '+S.name);
+ saveResume();
  if(st.tool=='table')renderTable();
  else if(st.tool=='flash'){fcInit();renderFlash();}
+ else if(st.tool=='quiz'){qzInit();renderQuiz();}
  else {mtInit();renderMatch();}
 }
 function setDesc(){return '<div class="setdesc"><b>'+S.name+' '+S.full+'</b> · '+S.fa+' → '+S.fb+'</div>';}
@@ -392,39 +431,56 @@ let blur=false;
 function renderTable(){
  let rows='<div class="tr head"><div class="td">'+esc(S.fa)+'</div><div class="td">'+esc(S.fb)+'</div></div>';
  S.items.forEach(it=>{
-  const a=S.aeng?'<span class="eng">'+esc(it.a)+'</span>':esc(it.a);
+  const a='<button class="spkt" data-w="'+escA(it.w)+'">🔊</button>'+(S.aeng?'<span class="eng">'+esc(it.a)+'</span>':esc(it.a));
   const b='<span class="'+(S.beng?'eng':'')+'">'+chunked(it.b)+'</span>';
   rows+='<div class="tr"><div class="td a">'+a+'</div><div class="td b">'+b+'</div></div>';
  });
- view.innerHTML=setDesc()+'<div class="barrow"><span class="n">총 '+S.items.length+'개</span>'+
+ const kc=knownCount(st.grade,SCHOOL[st.school][st.grade],st.lesson);
+ view.innerHTML=setDesc()+'<div class="barrow"><span class="n">총 '+S.items.length+'개 · 외움 '+kc+'</span>'+
   '<button class="mini '+(blur?'on':'')+'" id="blurBtn">'+(blur?'정답 보기':'정답 가리기')+'</button></div>'+
   '<div class="tbl '+(blur?'blur':'')+'">'+rows+'</div>';
  document.getElementById('blurBtn').onclick=()=>{blur=!blur;renderTable();};
  if(blur)view.querySelectorAll('.td.b').forEach(td=>td.onclick=()=>td.classList.toggle('show'));
+ view.querySelectorAll('.spkt').forEach(b=>b.onclick=(e)=>{e.stopPropagation();speak(b.dataset.w);});
 }
 /* FLASH */
-let fc={i:0,flip:false,order:null,rev:false};
-function fcInit(){fc.order=S.items.map((_,i)=>i);fc.i=0;fc.flip=false;fc.rev=false;}
+let fc={i:0,flip:false,order:null,rev:false,onlyUnknown:false};
+function fcInit(){var idxs=S.items.map((_,i)=>i);if(fc.onlyUnknown){var f=idxs.filter(i=>!isKnown(S.items[i].wi));idxs=f.length?f:idxs;}fc.order=idxs;fc.i=0;fc.flip=false;}
 function renderFlash(){
+ if(!fc.order||!fc.order.length)fcInit();
  const it=S.items[fc.order[fc.i]];
  const front=fc.rev?it.b:it.a,back=fc.rev?it.a:it.b;
  const fe=fc.rev?S.beng:S.aeng,be=fc.rev?S.aeng:S.beng;
  const fl=fc.rev?S.fb:S.fa,bl=fc.rev?S.fa:S.fb;
+ const known=isKnown(it.wi);
  view.innerHTML=setDesc()+'<div class="fc-wrap">'+
-  '<div class="fc-meta"><span class="cnt">'+(fc.i+1)+' / '+S.items.length+'</span>'+
-   '<div class="chipbar"><button class="mini" id="rev">↔ 앞면 바꾸기</button><button class="mini" id="shuf">🔀 섞기</button></div></div>'+
+  '<div class="fc-meta"><span class="cnt">'+(fc.i+1)+' / '+fc.order.length+'</span>'+
+   '<div class="chipbar">'+
+     '<button class="mini'+(fc.onlyUnknown?' on':'')+'" id="ou">🎯 모르는 것만</button>'+
+     '<button class="mini" id="rev">↔ 앞면</button>'+
+     '<button class="mini" id="shuf">🔀 섞기</button></div></div>'+
   '<div class="fc'+(fc.flip?' flip':'')+'" id="card"><div class="fc-in">'+
-   '<div class="face front"><div class="lab">'+esc(fl)+'</div><div class="txt '+(fe?'eng':'')+'">'+chunked(front)+'</div><div class="hint">탭하여 뒤집기</div></div>'+
-   '<div class="face rear"><div class="lab">'+esc(bl)+'</div><div class="txt '+(be?'eng':'')+'">'+chunked(back)+'</div><div class="hint">탭하여 뒤집기</div></div>'+
+   '<div class="face front"><div class="lab">'+esc(fl)+'</div><div class="txt '+(fe?'eng':'')+'">'+chunked(front)+'</div><button class="spk" id="spk1">🔊</button><div class="hint">탭하여 뒤집기</div></div>'+
+   '<div class="face rear"><div class="lab">'+esc(bl)+'</div><div class="txt '+(be?'eng':'')+'">'+chunked(back)+'</div><button class="spk" id="spk2">🔊</button><div class="hint">탭하여 뒤집기</div></div>'+
    '</div></div>'+
+  '<div class="fc-judge"><button class="jb no" id="jno">✕ 다시</button><button class="jb yes'+(known?' done':'')+'" id="jyes">'+(known?'✓ 외움':'✓ 알아요')+'</button></div>'+
   '<div class="fc-ctl"><button class="nav" id="prev">◀ 이전</button><button class="nav" id="next">다음 ▶</button></div></div>';
- document.getElementById('card').onclick=function(){fc.flip=!fc.flip;this.classList.toggle('flip');};
- document.getElementById('prev').onclick=()=>{fc.i=(fc.i-1+S.items.length)%S.items.length;fc.flip=false;renderFlash();};
- document.getElementById('next').onclick=()=>{fc.i=(fc.i+1)%S.items.length;fc.flip=false;renderFlash();};
+ const card=document.getElementById('card');
+ card.onclick=function(){fc.flip=!fc.flip;this.classList.toggle('flip');};
+ function go2(d){fc.i=(fc.i+d+fc.order.length)%fc.order.length;fc.flip=false;renderFlash();}
+ document.getElementById('prev').onclick=()=>go2(-1);
+ document.getElementById('next').onclick=()=>go2(1);
  document.getElementById('shuf').onclick=()=>{fc.order=shuffle(fc.order);fc.i=0;fc.flip=false;renderFlash();};
  document.getElementById('rev').onclick=()=>{fc.rev=!fc.rev;fc.flip=false;renderFlash();};
+ document.getElementById('ou').onclick=()=>{fc.onlyUnknown=!fc.onlyUnknown;fcInit();renderFlash();};
+ document.getElementById('jyes').onclick=(e)=>{e.stopPropagation();setKnown(it.wi,true);go2(1);};
+ document.getElementById('jno').onclick=(e)=>{e.stopPropagation();setKnown(it.wi,false);go2(1);};
+ var sp=function(e){e.stopPropagation();speak(it.w);};
+ document.getElementById('spk1').onclick=sp;document.getElementById('spk2').onclick=sp;
+ var sx=0,sy=0;
+ card.addEventListener('touchstart',function(e){sx=e.changedTouches[0].clientX;sy=e.changedTouches[0].clientY;},{passive:true});
+ card.addEventListener('touchend',function(e){var dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)){go2(dx<0?1:-1);}},{passive:true});
 }
-/* MATCH */
 const PER=4;
 let mt={round:0,rounds:null};
 function mtInit(){
@@ -435,8 +491,8 @@ function mtInit(){
 function renderMatch(){
  const grp=mt.rounds[mt.round];const total=mt.rounds.length;
  const L=shuffle(grp),R=shuffle(grp);
- const lh=L.map(p=>'<div class="mcard l" data-id="'+p.id+'">'+(S.aeng?'<span class="eng">'+esc(p.a)+'</span>':esc(p.a))+'</div>').join('');
- const rh=R.map(p=>'<div class="mcard r '+(S.beng?'eng':'')+'" data-id="'+p.id+'">'+chunked(p.b)+'</div>').join('');
+ const lh=L.map(p=>'<div class="mcard l" data-id="'+p.id+'">'+(S.aeng?'<span class="eng">'+plain(p.a)+'</span>':plain(p.a))+'</div>').join('');
+ const rh=R.map(p=>'<div class="mcard r '+(S.beng?'eng':'')+'" data-id="'+p.id+'">'+plain(p.b)+'</div>').join('');
  view.innerHTML=setDesc()+'<div class="mtop"><span class="info">라운드 '+(mt.round+1)+'/'+total+'</span><span class="info">'+S.fa+' ↔ '+S.fb+'</span></div>'+
   '<div id="mboard"><div class="mcols"><div class="mcol">'+lh+'</div><div class="mcol">'+rh+'</div></div></div>'+
   '<button class="bigbtn sec" id="reshuf" style="margin-top:12px">🔀 전체 다시 섞기</button>';
@@ -469,6 +525,80 @@ function renderMatch(){
   board.after(btn);
  }
 }
+function resumeHtml(){
+ var r=getResume();
+ if(!r||!r.school||!SCHOOL[r.school]||!hasData(r.grade,SCHOOL[r.school]?SCHOOL[r.school][r.grade]:''))return '';
+ var pub=SCHOOL[r.school][r.grade];
+ if(!DB[r.grade]||!DB[r.grade][pub]||!DB[r.grade][pub][r.lesson])return '';
+ var tn={table:'암기표',flash:'플래시카드',match:'매칭게임',quiz:'퀴즈'}[r.tool]||'';
+ return '<div class="resume" id="resumeBtn">▶ 이어서 학습 <span>'+r.school+' 중'+r.grade+' · '+r.lesson+(r.setIdx!=null?' · '+(+r.setIdx+1)+'세트':'')+' '+tn+'</span></div>';
+}
+function doResume(){
+ var r=getResume(); if(!r)return;
+ var pub=SCHOOL[r.school][r.grade];
+ if(!DB[r.grade]||!DB[r.grade][pub]||!DB[r.grade][pub][r.lesson])return;
+ st.school=r.school;st.grade=r.grade;st.lesson=r.lesson;st.setIdx=r.setIdx;st.tool=r.tool;
+ SETS=buildSets(DB[r.grade][pub][r.lesson].entries);
+ go('study');
+}
+/* QUIZ */
+let qz={i:0,qs:null,score:0,wrong:[],answered:false};
+function qzInit(){
+ var items=S.items.slice();
+ var pick=shuffle(items.map((_,i)=>i)).slice(0,Math.min(12,items.length));
+ qz.qs=pick.map(function(idx){
+   var it=items[idx];
+   var others=shuffle(items.filter((x,j)=>j!==idx && x.b!==it.b)).slice(0,3).map(x=>x.b);
+   var opts=shuffle([it.b].concat(others));
+   return {prompt:it.a,promptW:it.w,correct:it.b,opts:opts,wi:it.wi};
+ });
+ qz.i=0;qz.score=0;qz.wrong=[];qz.answered=false;
+}
+function renderQuiz(){
+ if(!qz.qs)qzInit();
+ if(qz.i>=qz.qs.length)return renderQuizEnd();
+ var q=qz.qs[qz.i];
+ var promptHtml=(S.aeng?'<span class="eng">'+esc(q.prompt)+'</span>':esc(q.prompt));
+ var spk=S.aeng?'<button class="spk" style="position:static;margin-left:8px" id="qspk">🔊</button>':'';
+ view.innerHTML=setDesc()+
+  '<div class="qtop"><span class="info">'+(qz.i+1)+' / '+qz.qs.length+'</span><span class="info">점수 '+qz.score+'</span></div>'+
+  '<div class="qprompt">'+promptHtml+spk+'</div>'+
+  '<div class="qopts" id="qo">'+q.opts.map(function(o,k){return '<button class="qopt'+(S.beng?' eng':'')+'" data-k="'+k+'">'+plain(o)+'</button>';}).join('')+'</div>'+
+  '<div id="qfoot"></div>';
+ if(S.aeng){var qs=document.getElementById('qspk'); if(qs)qs.onclick=function(){speak(q.promptW);};}
+ var qo=document.getElementById('qo');
+ qo.querySelectorAll('.qopt').forEach(function(btn){
+   btn.onclick=function(){
+     if(qz.answered)return; qz.answered=true;
+     var chosen=q.opts[+btn.dataset.k]; var ok=chosen===q.correct;
+     setKnown(q.wi,ok);
+     qo.querySelectorAll('.qopt').forEach(function(b2){
+       var v=q.opts[+b2.dataset.k];
+       if(v===q.correct)b2.classList.add('correct');
+       else if(b2===btn)b2.classList.add('wrongo');
+       b2.style.pointerEvents='none';
+     });
+     if(ok)qz.score++; else qz.wrong.push({p:q.prompt,c:q.correct});
+     document.getElementById('qfoot').innerHTML='<button class="bigbtn" id="qnext">'+(qz.i<qz.qs.length-1?'다음 ▶':'결과 보기')+'</button>';
+     document.getElementById('qnext').onclick=function(){qz.i++;qz.answered=false;renderQuiz();};
+   };
+ });
+}
+function renderQuizEnd(){
+ var n=qz.qs.length;
+ view.innerHTML=setDesc()+
+  '<div class="qend"><div class="qbig">'+qz.score+' / '+n+'</div><div class="qsub">정답률 '+Math.round(qz.score/n*100)+'%</div></div>'+
+  (qz.wrong.length?'<div class="qwrap"><div class="qwh">오답 노트</div>'+qz.wrong.map(function(w){return '<div class="qwrow"><b>'+esc(w.p)+'</b><span>'+plain(w.c)+'</span></div>';}).join('')+'</div>':'<div class="qend"><div class="qsub">전부 정답! 🎉</div></div>')+
+  '<button class="bigbtn" id="qretry">🔁 다시 풀기</button>';
+ document.getElementById('qretry').onclick=function(){qzInit();renderQuiz();};
+}
+
+window.addEventListener('keydown',function(e){
+ if(st.screen!=='study'||st.tool!=='flash')return;
+ if(e.key==='ArrowRight'){var n=document.getElementById('next');n&&n.click();}
+ else if(e.key==='ArrowLeft'){var p=document.getElementById('prev');p&&p.click();}
+ else if(e.key===' '||e.key==='ArrowUp'){e.preventDefault();var c=document.getElementById('card');c&&c.click();}
+});
 render();
 if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}
 </script>

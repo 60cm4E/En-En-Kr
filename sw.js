@@ -1,6 +1,6 @@
 // 네트워크 우선(network-first) 서비스워커: 업데이트가 항상 우선 반영되고,
 // 오프라인일 때만 캐시 사용 → 학생이 옛 버전에 갇히는 문제 예방.
-const CACHE = 'yyp-v1';
+const CACHE = 'yyp-v2';
 const ASSETS = ['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./icon-180.png'];
 self.addEventListener('install', e => {
   self.skipWaiting();
