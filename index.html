@@ -155,6 +155,19 @@ main{flex:1;padding:14px 12px 30px}
 .mdone b{color:var(--good)}
 footer{text-align:center;color:var(--sub);font-size:11px;padding:14px}
 @media(min-width:820px){.app{max-width:720px}.fc{height:380px}.face .txt{font-size:26px}.tbl .td{font-size:14.5px}.mcard{font-size:14px;min-height:60px}}
+.printhead{display:none}
+@media print{
+ header,footer,.setdesc,.barrow,.spkt,.spk{display:none !important}
+ .app{max-width:100% !important;min-height:0}
+ main{padding:0 !important}
+ body,.app{background:#fff !important}
+ .printhead{display:block !important;font-size:15px;font-weight:800;margin:0 0 10px;padding-bottom:6px;border-bottom:2px solid #000}
+ .tbl{border:1px solid #000;border-radius:0}
+ .tr{break-inside:avoid;border-bottom:1px solid #000}
+ .td{border-left:1px solid #000}
+ .td .eng,.td.b{color:#000 !important}
+ .tbl.blur .tr:not(.head) .td.b{filter:none !important;color:transparent !important}
+}
 </style>
 </head>
 <body>
@@ -436,15 +449,17 @@ function renderTable(){
   rows+='<div class="tr"><div class="td a">'+a+'</div><div class="td b">'+b+'</div></div>';
  });
  const kc=knownCount(st.grade,SCHOOL[st.school][st.grade],st.lesson);
- view.innerHTML=setDesc()+'<div class="barrow"><span class="n">총 '+S.items.length+'개 · 외움 '+kc+'</span>'+
-  '<button class="mini '+(blur?'on':'')+'" id="blurBtn">'+(blur?'정답 보기':'정답 가리기')+'</button></div>'+
+ view.innerHTML=setDesc()+'<div class="printhead">'+esc(st.school)+' 중'+st.grade+' · '+esc(st.lesson)+' · '+esc(S.name)+' ('+esc(S.fa)+' → '+esc(S.fb)+')</div>'+'<div class="barrow"><span class="n">총 '+S.items.length+'개 · 외움 '+kc+'</span>'+
+  '<button class="mini '+(blur?'on':'')+'" id="blurBtn">'+(blur?'정답 보기':'정답 가리기')+'</button> <button class="mini" id="printBtn">🖨 인쇄</button></div>'+
   '<div class="tbl '+(blur?'blur':'')+'">'+rows+'</div>';
  document.getElementById('blurBtn').onclick=()=>{blur=!blur;renderTable();};
+ document.getElementById('printBtn').onclick=()=>window.print();
  if(blur)view.querySelectorAll('.td.b').forEach(td=>td.onclick=()=>td.classList.toggle('show'));
  view.querySelectorAll('.spkt').forEach(b=>b.onclick=(e)=>{e.stopPropagation();speak(b.dataset.w);});
 }
 /* FLASH */
-let fc={i:0,flip:false,order:null,rev:false,onlyUnknown:false};
+let fc={i:0,flip:false,order:null,rev:false,onlyUnknown:false,autoplay:true};
+try{fc.autoplay=localStorage.getItem('fcAuto')!=='0';}catch(e){}
 function fcInit(){var idxs=S.items.map((_,i)=>i);if(fc.onlyUnknown){var f=idxs.filter(i=>!isKnown(S.items[i].wi));idxs=f.length?f:idxs;}fc.order=idxs;fc.i=0;fc.flip=false;}
 function renderFlash(){
  if(!fc.order||!fc.order.length)fcInit();
@@ -456,7 +471,7 @@ function renderFlash(){
  view.innerHTML=setDesc()+'<div class="fc-wrap">'+
   '<div class="fc-meta"><span class="cnt">'+(fc.i+1)+' / '+fc.order.length+'</span>'+
    '<div class="chipbar">'+
-     '<button class="mini'+(fc.onlyUnknown?' on':'')+'" id="ou">🎯 모르는 것만</button>'+
+     '<button class="mini'+(fc.autoplay?' on':'')+'" id="ap">🔊 자동</button>'+'<button class="mini'+(fc.onlyUnknown?' on':'')+'" id="ou">🎯 모르는 것만</button>'+
      '<button class="mini" id="rev">↔ 앞면</button>'+
      '<button class="mini" id="shuf">🔀 섞기</button></div></div>'+
   '<div class="fc'+(fc.flip?' flip':'')+'" id="card"><div class="fc-in">'+
@@ -473,6 +488,7 @@ function renderFlash(){
  document.getElementById('shuf').onclick=()=>{fc.order=shuffle(fc.order);fc.i=0;fc.flip=false;renderFlash();};
  document.getElementById('rev').onclick=()=>{fc.rev=!fc.rev;fc.flip=false;renderFlash();};
  document.getElementById('ou').onclick=()=>{fc.onlyUnknown=!fc.onlyUnknown;fcInit();renderFlash();};
+ document.getElementById('ap').onclick=()=>{fc.autoplay=!fc.autoplay;try{localStorage.setItem('fcAuto',fc.autoplay?'1':'0');}catch(e){}renderFlash();};
  document.getElementById('jyes').onclick=(e)=>{e.stopPropagation();setKnown(it.wi,true);go2(1);};
  document.getElementById('jno').onclick=(e)=>{e.stopPropagation();setKnown(it.wi,false);go2(1);};
  var sp=function(e){e.stopPropagation();speak(it.w);};
@@ -480,6 +496,7 @@ function renderFlash(){
  var sx=0,sy=0;
  card.addEventListener('touchstart',function(e){sx=e.changedTouches[0].clientX;sy=e.changedTouches[0].clientY;},{passive:true});
  card.addEventListener('touchend',function(e){var dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)){go2(dx<0?1:-1);}},{passive:true});
+ if(fc.autoplay&&fe){speak(it.w);}
 }
 const PER=4;
 let mt={round:0,rounds:null};
