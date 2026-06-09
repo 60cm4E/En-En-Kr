@@ -138,6 +138,25 @@ main{flex:1;padding:14px 12px 30px}
 .qwrow{display:flex;justify-content:space-between;gap:10px;padding:9px 14px;border-top:1px solid var(--line);font-size:13px}
 .qwrow b{color:var(--ink)}
 .qwrow span{color:var(--ko);text-align:right}
+.atblwrap{overflow-x:auto}
+.atbl{min-width:520px;background:#fff;border:1px solid var(--line);border-radius:13px;overflow:hidden}
+.atr{display:grid;grid-template-columns:0.85fr 0.95fr 1.7fr 1.7fr;border-bottom:1px solid var(--line)}
+.atr:last-child{border-bottom:0}
+.atr.ahead{background:#f7f8fc;font-size:10.5px;font-weight:800;color:var(--sub);text-transform:uppercase}
+.atd{padding:9px 9px;font-size:11.5px;border-left:1px solid var(--line);display:flex;align-items:center;flex-wrap:wrap;gap:3px;word-break:keep-all;line-height:1.4}
+.atd:first-child{border-left:0}
+.atd.aw{font-weight:700}
+.atd.ak{color:var(--ko);font-weight:600}
+.atbl.ablur .atr:not(.ahead) .atd.ak{filter:blur(5px);cursor:pointer}
+.atbl.ablur .atr .atd.ak.show{filter:none}
+.tmcols{display:grid;grid-template-columns:1fr 1fr 0.7fr;gap:7px;align-items:stretch}
+.tmcol{display:grid;grid-auto-rows:1fr;gap:7px}
+.tmc{background:#fff;border:1.5px solid var(--line);border-radius:11px;padding:9px 6px;font-size:11.5px;font-weight:600;cursor:pointer;min-height:50px;display:flex;align-items:center;justify-content:center;text-align:center;word-break:keep-all;line-height:1.35;transition:.12s}
+.tmc.b,.tmc.c{color:var(--en)}
+.tmc.a{color:var(--ko)}
+.tmc.sel{border-color:var(--brand);background:#eef0ff;box-shadow:0 0 0 3px rgba(79,70,229,.12)}
+.tmc.matched{border-color:var(--good);background:#eafaf0;color:var(--good);opacity:.5;pointer-events:none}
+.tmc.wrong{border-color:var(--bad);background:#fdecec;animation:shake .3s}
 .mtop{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .mtop .info{font-size:11.5px;color:var(--sub);font-weight:700}
 .mcols{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch}
@@ -248,6 +267,8 @@ function getScope(s,g){
 }
 function setScope(s,g,arr){try{localStorage.setItem(scopeKey(s,g),JSON.stringify(arr));}catch(e){}}
 // build sets for a lesson's entries
+function isProto(){return true;}
+function curEntries(){return DB[st.grade][SCHOOL[st.school][st.grade]][st.lesson].entries;}
 function buildSets(entries){
  const J=a=>a.join(' / ');
  return [
@@ -262,7 +283,7 @@ function buildSets(entries){
  ];
 }
 // app state
-let st={screen:'home',school:null,grade:null,lesson:null,setIdx:null,tool:null,scopeFrom:'lessons'};
+let st={screen:'home',school:null,grade:null,lesson:null,setIdx:null,tool:null,scopeFrom:'lessons',special:null};
 let SETS=null,S=null;
 const ORDER=['home','grade','lessons','sets','tools','study'];
 const view=document.getElementById('view');
@@ -272,6 +293,7 @@ const backBtn=document.getElementById('back');
 function go(screen){st.screen=screen;render();}
 function back(){
  const map={grade:'home',lessons:'grade',sets:'lessons',tools:'sets',study:'tools',scope:(st.scopeFrom||'lessons'),admin:'home'};
+ if(st.screen==='study'&&st.special){go('sets');return;}
  if(map[st.screen]) go(map[st.screen]);
 }
 backBtn.onclick=back;
@@ -282,7 +304,8 @@ function crumb(){
  if(st.grade&&st.school)a.push(dispPub(SCHOOL[st.school][st.grade]));
  if(st.lesson)a.push(st.lesson);
  if(st.setIdx!=null)a.push(SETS[st.setIdx].name);
- if(st.tool)a.push({table:'암기표',flash:'플래시카드',match:'매칭게임'}[st.tool]);
+ if(st.special==='all')a.push('모든 암기표'); else if(st.special==='tri')a.push('3단매칭');
+ if(st.tool)a.push({table:'암기표',flash:'플래시카드',quiz:'퀴즈',match:'매칭게임'}[st.tool]);
  crumbEl.innerHTML=a.join(' <i>›</i> ');
 }
 function setTitle(t){titleEl.textContent=t;}
@@ -406,16 +429,18 @@ function renderScope(){
 }
 function renderSets(){
  setTitle(st.lesson+' · 세트 선택');
- st.tool=null;
+ st.tool=null;st.special=null;
  SETS=buildSets(DB[st.grade][SCHOOL[st.school][st.grade]][st.lesson].entries);
  view.innerHTML='<div class="lead"><b>학습 세트</b>를 선택하세요</div><div class="list" id="g"></div>';
  const g=document.getElementById('g');
+ function mktile(badge,bg,t1,t2,onclick){var r=document.createElement('div');r.className='lrow';
+  r.innerHTML='<div class="badge" style="background:'+bg+'">'+badge+'</div><div class="body"><div class="t1">'+t1+'</div><div class="t2">'+t2+'</div></div><div class="arr">›</div>';
+  r.onclick=onclick;g.appendChild(r);}
+ if(isProto())mktile('0','#7c3aed','모든 암기표','영단어 · 뜻 · 영영풀이 · 직독직해 (인쇄용)',()=>{st.special='all';go('study');});
  SETS.forEach((s,i)=>{
-  const r=document.createElement('div');r.className='lrow';
-  r.innerHTML='<div class="badge" style="background:var(--teal)">'+(i+1)+'</div><div class="body">'+
-   '<div class="t1">'+s.full+'</div><div class="t2">'+s.fa+' → '+s.fb+'</div></div><div class="arr">›</div>';
-  r.onclick=()=>{st.setIdx=i;go('tools');};g.appendChild(r);
+  mktile((i+1),'var(--teal)',s.full,s.fa+' → '+s.fb,()=>{st.special=null;st.setIdx=i;go('tools');});
  });
+ if(isProto())mktile('5','#db2777','3단매칭','직독직해 ↔ 영영풀이 ↔ 영단어 매칭',()=>{st.special='tri';go('study');});
 }
 function renderTools(){
  setTitle(SETS[st.setIdx].name+' · 도구 선택');
@@ -430,6 +455,8 @@ function renderTools(){
  });
 }
 function renderStudy(){
+ if(st.special==='all')return renderAllTable();
+ if(st.special==='tri')return renderTriMatch();
  S=SETS[st.setIdx];
  setTitle(st.lesson+' · '+S.name);
  saveResume();
@@ -608,6 +635,80 @@ function renderQuizEnd(){
   (qz.wrong.length?'<div class="qwrap"><div class="qwh">오답 노트</div>'+qz.wrong.map(function(w){return '<div class="qwrow"><b>'+esc(w.p)+'</b><span>'+plain(w.c)+'</span></div>';}).join('')+'</div>':'<div class="qend"><div class="qsub">전부 정답! 🎉</div></div>')+
   '<button class="bigbtn" id="qretry">🔁 다시 풀기</button>';
  document.getElementById('qretry').onclick=function(){qzInit();renderQuiz();};
+}
+
+let ablur=false;
+function renderAllTable(){
+ setTitle(st.lesson+' · 모든 암기표');
+ var ents=curEntries();
+ var rows='<div class="atr ahead"><div class="atd">영단어</div><div class="atd">한글 뜻</div><div class="atd">영영풀이(영어)</div><div class="atd">직독직해(한글)</div></div>';
+ ents.forEach(function(e){
+   var eng=e.eng?chunked(e.eng.join(' / ')):esc(e.d);
+   var kor=e.kor?chunked(e.kor.join(' / ')):esc(e.t);
+   rows+='<div class="atr">'+
+     '<div class="atd aw"><button class="spkt" data-w="'+escA(e.w)+'">🔊</button><span class="eng">'+esc(e.w)+'</span></div>'+
+     '<div class="atd ak">'+esc(e.m)+'</div>'+
+     '<div class="atd"><span class="eng">'+eng+'</span></div>'+
+     '<div class="atd ak">'+kor+'</div></div>';
+ });
+ view.innerHTML='<div class="setdesc"><b>모든 암기표</b> · 영단어·뜻·영영풀이·직독직해 한눈에</div>'+
+  '<div class="printhead">'+esc(st.school)+' 중'+st.grade+' · '+esc(st.lesson)+' · 모든 암기표</div>'+
+  '<div class="barrow"><span class="n">총 '+ents.length+'개</span><span><button class="mini '+(ablur?'on':'')+'" id="ab">'+(ablur?'정답 보기':'정답 가리기')+'</button> <button class="mini" id="pb">🖨 인쇄</button></span></div>'+
+  '<div class="atblwrap"><div class="atbl'+(ablur?' ablur':'')+'">'+rows+'</div></div>';
+ document.getElementById('ab').onclick=function(){ablur=!ablur;renderAllTable();};
+ document.getElementById('pb').onclick=function(){window.print();};
+ view.querySelectorAll('.spkt').forEach(function(b){b.onclick=function(e){e.stopPropagation();speak(b.dataset.w);};});
+ if(ablur)view.querySelectorAll('.atd.ak').forEach(function(td){td.onclick=function(){td.classList.toggle('show');};});
+}
+const PER3=4;
+let tm={round:0,rounds:null};
+function tmInit(){
+ var ents=curEntries().map(function(e,i){return {id:i,kor:e.kor?e.kor.join(' / '):e.t,eng:e.eng?e.eng.join(' / '):e.d,w:e.w};});
+ var idx=shuffle(ents.map(function(_,i){return i;}));tm.rounds=[];
+ for(var i=0;i<idx.length;i+=PER3)tm.rounds.push(idx.slice(i,i+PER3).map(function(k){return ents[k];}));
+ tm.round=0;
+}
+function renderTriMatch(){
+ setTitle(st.lesson+' · 3단매칭');
+ if(!tm.rounds)tmInit();
+ var grp=tm.rounds[tm.round],total=tm.rounds.length;
+ var A=shuffle(grp),B=shuffle(grp),C=shuffle(grp);
+ function col(arr,cls,fn){return arr.map(function(p){return '<div class="tmc '+cls+'" data-id="'+p.id+'">'+fn(p)+'</div>';}).join('');}
+ view.innerHTML='<div class="setdesc"><b>3단매칭</b> · 직독직해(한글) ↔ 영영풀이(영어) ↔ 영단어</div>'+
+   '<div class="mtop"><span class="info">라운드 '+(tm.round+1)+'/'+total+'</span><span class="info">같은 뜻 3장을 찾아 탭</span></div>'+
+   '<div id="tmboard"><div class="tmcols">'+
+     '<div class="tmcol">'+col(A,'a',function(p){return plain(p.kor);})+'</div>'+
+     '<div class="tmcol">'+col(B,'b eng',function(p){return plain(p.eng);})+'</div>'+
+     '<div class="tmcol">'+col(C,'c eng',function(p){return esc(p.w);})+'</div>'+
+   '</div></div>'+
+   '<button class="bigbtn sec" id="tre" style="margin-top:12px">🔀 전체 다시 섞기</button>';
+ var sel={a:null,b:null,c:null};
+ var board=document.getElementById('tmboard');
+ board.querySelectorAll('.tmc').forEach(function(card){
+   card.onclick=function(){
+     if(card.classList.contains('matched'))return;
+     var cls=card.classList.contains('a')?'a':(card.classList.contains('b')?'b':'c');
+     if(sel[cls])sel[cls].classList.remove('sel');
+     sel[cls]=card;card.classList.add('sel');
+     if(sel.a&&sel.b&&sel.c){
+       var ok=(sel.a.dataset.id===sel.b.dataset.id&&sel.b.dataset.id===sel.c.dataset.id);
+       var xs=[sel.a,sel.b,sel.c];
+       if(ok){xs.forEach(function(x){x.classList.add('matched');x.classList.remove('sel');});sel={a:null,b:null,c:null};
+         if(board.querySelectorAll('.tmc.a.matched').length===grp.length)tmDone();
+       }else{xs.forEach(function(x){x.classList.add('wrong');});sel={a:null,b:null,c:null};
+         setTimeout(function(){xs.forEach(function(x){x.classList.remove('wrong','sel');});},350);}
+     }
+   };
+ });
+ document.getElementById('tre').onclick=function(){tmInit();renderTriMatch();};
+ function tmDone(){
+   var last=tm.round>=total-1;
+   board.insertAdjacentHTML('beforebegin','<div class="mdone"><b>✅ 라운드 완료!</b></div>');
+   var btn=document.createElement('button');btn.className='bigbtn';btn.style.marginTop='10px';
+   btn.textContent=last?'🎉 전부 완료! 처음부터':'다음 라운드 ▶';
+   btn.onclick=function(){if(last)tmInit();else tm.round++;renderTriMatch();};
+   board.after(btn);
+ }
 }
 
 window.addEventListener('keydown',function(e){
